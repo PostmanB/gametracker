@@ -23,6 +23,7 @@ function App() {
   const latestSearchRef = useRef(0);
   const statusAccordionRef = useRef(null);
   const sectionRefs = useRef(new Map());
+  const mobileStickyRef = useRef(null);
   const programmaticScrollRef = useRef(false);
   const scrollResetTimeoutRef = useRef(0);
   const hasInitialScrollRef = useRef(false);
@@ -461,10 +462,91 @@ function App() {
 
     container.addEventListener("scroll", handleScroll, { passive: true });
 
+    // Keep the global mobile sticky header aligned to the active section when sliding
+    const sticky = mobileStickyRef.current;
+    let rafId = 0;
+
+    const updateStickyPosition = () => {
+      if (!sticky || !container) return;
+
+      const activeNode = sectionRefs.current.get(activeStatus);
+      if (!activeNode) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const sectionRect = activeNode.getBoundingClientRect();
+
+      // Calculate left/width relative to viewport
+      const left = Math.max(sectionRect.left, containerRect.left);
+      const right = Math.min(sectionRect.right, containerRect.right);
+      const width = Math.max(0, right - left);
+
+      // Compute top so the fixed header sits under the page header (keeps vertical sticky behavior)
+      const pageHeader = document.querySelector(".layout__header");
+      const headerBottom = pageHeader
+        ? pageHeader.getBoundingClientRect().bottom
+        : 8;
+      const topPx = Math.max(8, Math.round(headerBottom + 6));
+
+      // Apply fixed positioning so the header remains visible during page scroll
+      sticky.style.position = "fixed";
+      sticky.style.left = `${left}px`;
+      sticky.style.width = `${width}px`;
+      sticky.style.top = `${topPx}px`;
+      sticky.style.zIndex = 9999;
+      sticky.style.transform = "none";
+    };
+
+    const scheduleUpdate = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        updateStickyPosition();
+      });
+    };
+
+    container.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate, { passive: true });
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+
+    // run once immediately to position the sticky header
+    scheduleUpdate();
+
     return () => {
       container.removeEventListener("scroll", handleScroll);
+      container.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("scroll", scheduleUpdate);
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+      const sticky = mobileStickyRef.current;
+      if (sticky) {
+        sticky.style.position = "static";
+        sticky.style.left = null;
+        sticky.style.width = null;
+        sticky.style.top = null;
+        sticky.style.zIndex = null;
+        sticky.style.transform = null;
+      }
     };
   }, [isSliderViewport, statusColumns, activeStatus]);
+
+  // Keep content of the global mobile sticky header up to date
+  useEffect(() => {
+    const sticky = mobileStickyRef.current;
+    if (!sticky) return;
+    const column = statusColumns.find((c) => c.key === activeStatus);
+    if (!column) return;
+    const titleEl = sticky.querySelector(".status-accordion__sticky-title");
+    const countEl = sticky.querySelector(".status-accordion__sticky-count");
+    if (titleEl) titleEl.innerText = column.title;
+    if (countEl)
+      countEl.innerText = loadingGames
+        ? "Loading..."
+        : `${column.games.length} ${
+            column.games.length === 1 ? "game" : "games"
+          }`;
+  }, [mobileStickyRef, activeStatus, statusColumns, loadingGames]);
 
   return (
     <div className="layout">
@@ -540,6 +622,15 @@ function App() {
       </header>
 
       <main className="layout__main">
+        {isSliderViewport && (
+          <div
+            className="status-accordion__sticky-header"
+            ref={mobileStickyRef}
+          >
+            <span className="status-accordion__sticky-title" />
+            <span className="status-accordion__sticky-count" />
+          </div>
+        )}
         <div
           className="status-accordion"
           role="tablist"
@@ -610,16 +701,6 @@ function App() {
                   aria-labelledby={triggerId}
                   aria-hidden={!isActive}
                 >
-                  {isSliderViewport && (
-                    <div className="status-accordion__sticky-header">
-                      <span className="status-accordion__sticky-title">
-                        {title}
-                      </span>
-                      <span className="status-accordion__sticky-count">
-                        {loadingGames ? "Loading..." : countLabel}
-                      </span>
-                    </div>
-                  )}
                   {loadingGames ? (
                     <p>{loadingCopy}</p>
                   ) : columnGames.length === 0 ? (
