@@ -170,7 +170,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1.75rem clamp(1.5rem, 4vw, 2.5rem);
+  --panel-horizontal-padding: clamp(1.5rem, 4vw, 2.5rem);
+  padding: 1.75rem var(--panel-horizontal-padding);
   flex: 1 1 auto;
   /* Keep panel content from overlaying sticky trigger when scrolled */
   z-index: 1;
@@ -186,6 +187,29 @@ body {
   pointer-events: auto;
   visibility: visible;
   transition: opacity 0.3s ease, visibility 0s linear 0s;
+}
+
+.status-accordion__sticky-header {
+  display: none;
+}
+
+.status-accordion__sticky-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-accordion__sticky-count {
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.status-accordion__trigger-placeholder {
+  display: none;
 }
 
 .panel {
@@ -358,15 +382,12 @@ body {
   position: relative;
   overflow: hidden;
   box-shadow: 0 22px 38px rgba(15, 23, 42, 0.45);
-  transform: perspective(1100px)
-    rotateX(var(--hover-rotate-x))
-    rotateY(var(--hover-rotate-y))
-    translateY(var(--hover-translate-y))
+  transform: perspective(1100px) rotateX(var(--hover-rotate-x))
+    rotateY(var(--hover-rotate-y)) translateY(var(--hover-translate-y))
     scale3d(var(--hover-scale), var(--hover-scale), var(--hover-scale));
   transform-style: preserve-3d;
   transition: transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
-    box-shadow 0.35s ease,
-    border-color 0.35s ease;
+    box-shadow 0.35s ease, border-color 0.35s ease;
   will-change: transform;
 }
 
@@ -558,6 +579,12 @@ body {
     max-width: var(--accordion-collapsed-width);
   }
 
+  .status-accordion__trigger-placeholder {
+    display: block;
+    width: 100%;
+    min-height: clamp(2.8rem, 6vw, 3.3rem);
+  }
+
   .status-accordion__trigger {
     writing-mode: initial;
     transform: none;
@@ -574,9 +601,67 @@ body {
     font-size: 1.25rem;
   }
 
+  .status-accordion__sticky-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    position: sticky;
+    top: clamp(0.65rem, 6vw, 1.2rem);
+    margin: calc(-1 * 1.35rem) calc(-1 * var(--panel-horizontal-padding)) 0.9rem;
+    padding: 0.95rem var(--panel-horizontal-padding);
+    border-radius: 24px 24px 0 0;
+    background: linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.9) 0%,
+      rgba(15, 23, 42, 0.78) 100%
+    );
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.45);
+    color: #f8fafc;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    z-index: 12;
+    overflow: hidden;
+    align-self: stretch;
+  }
+
+  .status-accordion__sticky-header::before,
+  .status-accordion__sticky-header::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .status-accordion__sticky-header::before {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(15, 23, 42, 0.5)
+    );
+    opacity: 0.55;
+  }
+
+  .status-accordion__sticky-header::after {
+    background: linear-gradient(
+      135deg,
+      var(--status-accent, #3b82f6) 0%,
+      rgba(15, 23, 42, 0.74) 55%,
+      rgba(15, 23, 42, 0.38) 100%
+    );
+    opacity: 0.45;
+  }
+
+  .status-accordion__sticky-header span {
+    position: relative;
+    z-index: 1;
+  }
+
   .status-accordion__panel {
     --panel-columns: 1;
-    padding: 1.35rem clamp(1rem, 5vw, 1.75rem);
+    --panel-horizontal-padding: clamp(1rem, 5vw, 1.75rem);
+    padding: 1.35rem var(--panel-horizontal-padding);
   }
 
   .status-accordion__panel .cards-grid {
@@ -584,7 +669,6 @@ body {
     gap: 1.25rem;
   }
 }
-
 
 @media (max-width: 768px) {
   .layout {
@@ -630,9 +714,29 @@ body {
     font-size: 1.15rem;
   }
 
+  .status-accordion__trigger-placeholder {
+    min-height: clamp(2.55rem, 7vw, 3rem);
+  }
+
   .status-accordion__panel {
-    padding: 1.2rem 1.1rem 1.45rem;
+    --panel-horizontal-padding: 1.1rem;
+    padding: 1.2rem var(--panel-horizontal-padding) 1.45rem;
     --panel-columns: 1;
+  }
+
+  .status-accordion__sticky-header {
+    margin: calc(-1 * 1.2rem) calc(-1 * var(--panel-horizontal-padding)) 0.7rem;
+    padding: 0.75rem var(--panel-horizontal-padding);
+    border-radius: 20px 20px 0 0;
+    gap: 0.6rem;
+  }
+
+  .status-accordion__sticky-title {
+    font-size: 0.92rem;
+  }
+
+  .status-accordion__sticky-count {
+    font-size: 0.74rem;
   }
 
   .status-accordion__panel .cards-grid {
@@ -643,5 +747,3 @@ body {
     gap: 1.1rem;
   }
 }
-
-

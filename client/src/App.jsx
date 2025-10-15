@@ -187,45 +187,45 @@ function App() {
     );
   }, [games]);
 
-  const performSearch = useCallback(
-    async (term) => {
-      const trimmed = term.trim();
-      if (!trimmed) {
-        latestSearchRef.current += 1;
-        setSearchResults([]);
-        setSearching(false);
-        setError("");
+  const existingRawgIdsRef = useRef(existingRawgIds);
+  existingRawgIdsRef.current = existingRawgIds;
+
+  const performSearch = useCallback(async (term) => {
+    const trimmed = term.trim();
+    if (!trimmed) {
+      latestSearchRef.current += 1;
+      setSearchResults([]);
+      setSearching(false);
+      setError("");
+      return;
+    }
+
+    const requestId = latestSearchRef.current + 1;
+    latestSearchRef.current = requestId;
+    setSearching(true);
+    try {
+      const data = await searchRawgGames(trimmed, 1);
+      if (latestSearchRef.current !== requestId) {
         return;
       }
-
-      const requestId = latestSearchRef.current + 1;
-      latestSearchRef.current = requestId;
-      setSearching(true);
-      try {
-        const data = await searchRawgGames(trimmed, 1);
-        if (latestSearchRef.current !== requestId) {
-          return;
+      const filteredResults = (data.results || []).filter((result) => {
+        if (!result || typeof result.id === "undefined") {
+          return true;
         }
-        const filteredResults = (data.results || []).filter((result) => {
-          if (!result || typeof result.id === "undefined") {
-            return true;
-          }
-          return !existingRawgIds.has(String(result.id));
-        });
-        setSearchResults(filteredResults);
-        setError("");
-      } catch (err) {
-        if (latestSearchRef.current === requestId) {
-          setError(err.message);
-        }
-      } finally {
-        if (latestSearchRef.current === requestId) {
-          setSearching(false);
-        }
+        return !existingRawgIdsRef.current.has(String(result.id));
+      });
+      setSearchResults(filteredResults);
+      setError("");
+    } catch (err) {
+      if (latestSearchRef.current === requestId) {
+        setError(err.message);
       }
-    },
-    [existingRawgIds]
-  );
+    } finally {
+      if (latestSearchRef.current === requestId) {
+        setSearching(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     performSearch(debouncedSearchTerm);
@@ -558,6 +558,12 @@ function App() {
             const isActive = key === activeStatus;
             const panelId = `status-panel-${key}`;
             const triggerId = `status-trigger-${key}`;
+            const countLabel = `${columnGames.length} ${
+              columnGames.length === 1 ? "game" : "games"
+            }`;
+            const triggerLabel = loadingGames
+              ? `${title} column`
+              : `${title} column, ${countLabel}`;
 
             return (
               <section
@@ -581,13 +587,18 @@ function App() {
                   tabIndex={isActive ? 0 : -1}
                   onClick={() => setActiveStatus(key)}
                   onKeyDown={(event) => handleStatusKeyDown(event, index)}
+                  aria-label={triggerLabel}
                 >
-                  <span>{title}</span>
-                  {isActive && !loadingGames && (
-                    <small>
-                      {columnGames.length}{" "}
-                      {columnGames.length === 1 ? "game" : "games"}
-                    </small>
+                  {isSliderViewport ? (
+                    <span
+                      className="status-accordion__trigger-placeholder"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <>
+                      <span>{title}</span>
+                      {isActive && !loadingGames && <small>{countLabel}</small>}
+                    </>
                   )}
                 </button>
                 <div
@@ -599,6 +610,16 @@ function App() {
                   aria-labelledby={triggerId}
                   aria-hidden={!isActive}
                 >
+                  {isSliderViewport && (
+                    <div className="status-accordion__sticky-header">
+                      <span className="status-accordion__sticky-title">
+                        {title}
+                      </span>
+                      <span className="status-accordion__sticky-count">
+                        {loadingGames ? "Loading..." : countLabel}
+                      </span>
+                    </div>
+                  )}
                   {loadingGames ? (
                     <p>{loadingCopy}</p>
                   ) : columnGames.length === 0 ? (
