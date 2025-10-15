@@ -507,19 +507,6 @@
     "completedAt": null
   },
   {
-    "id": "f0425327-6706-47cd-aaba-39f9a32b8705",
-    "rawgId": "unique-123",
-    "title": "Test Game Unique",
-    "status": "completed",
-    "notes": "",
-    "rating": null,
-    "backgroundImage": null,
-    "released": null,
-    "createdAt": "2025-10-14T10:15:47.818Z",
-    "updatedAt": "2025-10-14T10:15:47.818Z",
-    "completedAt": "2025-10-14T10:15:47.818Z"
-  },
-  {
     "id": "fc766f99-d51b-4448-b529-e4b28306ba7d",
     "rawgId": "457729",
     "title": "Crash Bandicoot 4: It’s About Time",

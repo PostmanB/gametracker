@@ -1,13 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import {
-  FiCheck,
-  FiPlay,
-  FiRotateCcw,
-  FiTrash2,
-  FiPlus,
-  FiPause,
-} from "react-icons/fi";
+import GameCard from "./components/GameCard";
+import { FiCheck, FiPlus } from "react-icons/fi";
 import { useDebouncedValue } from "./hooks/useDebouncedValue";
 import {
   createGame,
@@ -289,130 +283,6 @@ function App() {
     [statusColumns]
   );
 
-  function renderGameCard(game) {
-    const isBusy = pendingAction.includes(game.id);
-    const hasArt = Boolean(game.backgroundImage);
-    return (
-      <article key={game.id} className="card">
-        <div className={`card__media${hasArt ? "" : " card__media--empty"}`}>
-          {hasArt ? (
-            <img
-              className="card__image"
-              src={game.backgroundImage}
-              alt={`${game.title} cover art`}
-            />
-          ) : (
-            <span className="card__media-placeholder">Artwork unavailable</span>
-          )}
-        </div>
-
-        <div className="card__content">
-          <header className="card__header">
-            <h3>{game.title}</h3>
-            {game.released && (
-              <span className="card__meta">Released {game.released}</span>
-            )}
-          </header>
-
-          <div className="card__details">
-            {game.completedAt && (
-              <span className="card__meta">
-                Completed {new Date(game.completedAt).toLocaleDateString()}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <footer className="card__actions">
-          {(game.status === "backlog" || game.status === "played") && (
-            <button
-              type="button"
-              className="card__action-button"
-              disabled={isBusy}
-              onClick={() => handleUpdateStatus(game.id, "playing")}
-              aria-label={
-                game.status === "backlog" ? "Start playing" : "Resume playing"
-              }
-              title={
-                game.status === "backlog" ? "Start playing" : "Resume playing"
-              }
-            >
-              <FiPlay aria-hidden="true" />
-            </button>
-          )}
-          {game.status === "playing" && (
-            <button
-              type="button"
-              className="card__action-button"
-              disabled={isBusy}
-              onClick={() => handleUpdateStatus(game.id, "backlog")}
-              aria-label="Move to backlog"
-              title="Move to backlog"
-            >
-              <FiRotateCcw aria-hidden="true" />
-            </button>
-          )}
-          <button
-            type="button"
-            className="card__action-button"
-            disabled={isBusy}
-            onClick={() =>
-              handleUpdateStatus(
-                game.id,
-                game.status === "played" ? "backlog" : "played"
-              )
-            }
-            aria-label={
-              game.status === "played" ? "Move to backlog" : "Mark as played"
-            }
-            title={
-              game.status === "played" ? "Move to backlog" : "Mark as played"
-            }
-          >
-            {game.status === "played" ? (
-              <FiRotateCcw aria-hidden="true" />
-            ) : (
-              <FiPause aria-hidden="true" />
-            )}
-          </button>
-          {game.status === "completed" ? (
-            <button
-              type="button"
-              className="card__action-button"
-              disabled={isBusy}
-              onClick={() => handleUpdateStatus(game.id, "backlog")}
-              aria-label="Move to backlog"
-              title="Move to backlog"
-            >
-              <FiRotateCcw aria-hidden="true" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="card__action-button"
-              disabled={isBusy}
-              onClick={() => handleUpdateStatus(game.id, "completed")}
-              aria-label="Mark completed"
-              title="Mark completed"
-            >
-              <FiCheck aria-hidden="true" />
-            </button>
-          )}
-          <button
-            type="button"
-            className="card__action-button card__action-button--danger"
-            disabled={isBusy}
-            onClick={() => handleRemove(game.id)}
-            aria-label="Remove game"
-            title="Remove game"
-          >
-            <FiTrash2 aria-hidden="true" />
-          </button>
-        </footer>
-      </article>
-    );
-  }
-
   return (
     <div className="layout">
       <header className="layout__header">
@@ -550,7 +420,15 @@ function App() {
                     <p className="empty">{emptyCopy}</p>
                   ) : (
                     <div className="cards-grid">
-                      {columnGames.map((game) => renderGameCard(game))}
+                      {columnGames.map((game) => (
+                        <GameCard
+                          key={game.id}
+                          game={game}
+                          isBusy={pendingAction.includes(game.id)}
+                          onUpdateStatus={handleUpdateStatus}
+                          onRemove={handleRemove}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
