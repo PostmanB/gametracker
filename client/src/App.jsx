@@ -21,11 +21,59 @@ function App() {
   const [searching, setSearching] = useState(false);
 
   const latestSearchRef = useRef(0);
+  const statusAccordionRef = useRef(null);
+  const sectionRefs = useRef(new Map());
+  const programmaticScrollRef = useRef(false);
+  const scrollResetTimeoutRef = useRef(0);
+  const hasInitialScrollRef = useRef(false);
 
   const [pendingAction, setPendingAction] = useState("");
+  const [isSliderViewport, setIsSliderViewport] = useState(false);
 
   useEffect(() => {
     loadGames();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const media = window.matchMedia("(max-width: 1024px)");
+    const updateMatch = (event) => {
+      setIsSliderViewport(event.matches);
+    };
+
+    updateMatch(media);
+
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", updateMatch);
+    } else {
+      media.addListener(updateMatch);
+    }
+
+    return () => {
+      if (typeof media.removeEventListener === "function") {
+        media.removeEventListener("change", updateMatch);
+      } else {
+        media.removeListener(updateMatch);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isSliderViewport) {
+      hasInitialScrollRef.current = false;
+    }
+  }, [isSliderViewport]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && scrollResetTimeoutRef.current) {
+        window.clearTimeout(scrollResetTimeoutRef.current);
+        scrollResetTimeoutRef.current = 0;
+      }
+    };
   }, []);
 
   async function loadGames() {
@@ -283,6 +331,141 @@ function App() {
     [statusColumns]
   );
 
+  const setSectionRef = useCallback((key, node) => {
+    if (node) {
+      sectionRefs.current.set(key, node);
+    } else {
+      sectionRefs.current.delete(key);
+    }
+  }, []);
+
+  const scrollToStatus = useCallback(
+    (statusKey, { behavior = "smooth" } = {}) => {
+      if (!statusKey || !isSliderViewport) {
+        return;
+      }
+
+      const container = statusAccordionRef.current;
+      const section = sectionRefs.current.get(statusKey);
+
+      if (!container || !section) {
+        return;
+      }
+
+      let desiredBehavior = behavior;
+      if (behavior !== "instant" && !hasInitialScrollRef.current) {
+        desiredBehavior = "instant";
+      }
+
+      hasInitialScrollRef.current = true;
+      programmaticScrollRef.current = true;
+
+      section.scrollIntoView({
+        block: "nearest",
+        inline: "center",
+        behavior: desiredBehavior,
+      });
+
+      const timeoutDuration = desiredBehavior === "smooth" ? 420 : 120;
+
+      if (typeof window !== "undefined") {
+        if (scrollResetTimeoutRef.current) {
+          window.clearTimeout(scrollResetTimeoutRef.current);
+        }
+
+        scrollResetTimeoutRef.current = window.setTimeout(() => {
+          programmaticScrollRef.current = false;
+          scrollResetTimeoutRef.current = 0;
+        }, timeoutDuration);
+      }
+    },
+    [isSliderViewport]
+  );
+
+  useEffect(() => {
+    if (!isSliderViewport || !activeStatus) {
+      return;
+    }
+
+    const hasActiveColumn = statusColumns.some(
+      (column) => column.key === activeStatus
+    );
+
+    if (!hasActiveColumn) {
+      return;
+    }
+
+    scrollToStatus(activeStatus);
+  }, [activeStatus, isSliderViewport, scrollToStatus, statusColumns]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !isSliderViewport) {
+      return undefined;
+    }
+
+    const container = statusAccordionRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    const getSections = () =>
+      statusColumns
+        .map((column) => ({
+          key: column.key,
+          node: sectionRefs.current.get(column.key),
+        }))
+        .filter((item) => Boolean(item.node));
+
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (programmaticScrollRef.current) {
+        return;
+      }
+
+      if (ticking) {
+        return;
+      }
+
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        ticking = false;
+
+        const sections = getSections();
+        if (!sections.length) {
+          return;
+        }
+
+        const containerRect = container.getBoundingClientRect();
+        const containerCenter = containerRect.left + containerRect.width / 2;
+
+        let nextKey = sections[0].key;
+        let closestDistance = Number.POSITIVE_INFINITY;
+
+        sections.forEach(({ key, node }) => {
+          const rect = node.getBoundingClientRect();
+          const sectionCenter = rect.left + rect.width / 2;
+          const distance = Math.abs(sectionCenter - containerCenter);
+
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            nextKey = key;
+          }
+        });
+
+        if (nextKey && nextKey !== activeStatus) {
+          setActiveStatus(nextKey);
+        }
+      });
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [isSliderViewport, statusColumns, activeStatus]);
+
   return (
     <div className="layout">
       <header className="layout__header">
@@ -361,6 +544,7 @@ function App() {
           className="status-accordion"
           role="tablist"
           aria-orientation="horizontal"
+          ref={statusAccordionRef}
         >
           {statusColumns.map((column, index) => {
             const {
@@ -384,6 +568,7 @@ function App() {
                 role="presentation"
                 data-status={key}
                 style={{ "--status-accent": accent }}
+                ref={(node) => setSectionRef(key, node)}
               >
                 <button
                   id={triggerId}
@@ -398,7 +583,7 @@ function App() {
                   onKeyDown={(event) => handleStatusKeyDown(event, index)}
                 >
                   <span>{title}</span>
-                  {!loadingGames && (
+                  {isActive && !loadingGames && (
                     <small>
                       {columnGames.length}{" "}
                       {columnGames.length === 1 ? "game" : "games"}

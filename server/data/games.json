@@ -791,5 +791,31 @@
     "createdAt": "2025-10-14T12:01:54.081Z",
     "updatedAt": "2025-10-14T12:01:54.081Z",
     "completedAt": null
+  },
+  {
+    "id": "73cf8a3d-1216-435e-a43e-777ed2307b58",
+    "rawgId": "3191",
+    "title": "Mad Max",
+    "status": "backlog",
+    "notes": "",
+    "rating": null,
+    "backgroundImage": "https://media.rawg.io/media/games/d7d/d7d33daa1892e2468cd0263d5dfc957e.jpg",
+    "released": "2015-08-31",
+    "createdAt": "2025-10-15T07:48:58.880Z",
+    "updatedAt": "2025-10-15T07:48:58.880Z",
+    "completedAt": null
+  },
+  {
+    "id": "258afb13-c5df-456f-bae1-2a41e8516770",
+    "rawgId": "274767",
+    "title": "Far Cry New Dawn",
+    "status": "backlog",
+    "notes": "",
+    "rating": null,
+    "backgroundImage": "https://media.rawg.io/media/games/6d2/6d27cf9c22f2b28cf3ae706464d138f9.jpg",
+    "released": "2019-02-15",
+    "createdAt": "2025-10-15T07:51:13.180Z",
+    "updatedAt": "2025-10-15T07:51:13.180Z",
+    "completedAt": null
   }
 ]
