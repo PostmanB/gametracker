@@ -3019,14 +3019,14 @@
     "id": "434537bd-9be0-4e32-b4b2-6745d63d92f7",
     "rawgId": "857613",
     "title": "Teslagrad 2",
-    "status": "playing",
+    "status": "completed",
     "notes": "",
     "rating": null,
     "backgroundImage": "https://media.rawg.io/media/screenshots/9cd/9cd2bbf9db65bac63e42eb8556a4905b.jpg",
     "released": "2023-04-19",
     "createdAt": "2025-10-16T07:31:45.707Z",
-    "updatedAt": "2025-10-16T07:57:46.453Z",
-    "completedAt": null
+    "updatedAt": "2025-10-16T08:08:41.774Z",
+    "completedAt": "2025-10-16T08:08:41.774Z"
   },
   {
     "id": "2705d6de-894d-47e2-b69d-f074a6ba92fe",
@@ -3188,14 +3188,14 @@
     "id": "07f741df-f2f4-45f2-97dc-627161d072e4",
     "rawgId": "39",
     "title": "Prey",
-    "status": "playing",
+    "status": "completed",
     "notes": "",
     "rating": null,
     "backgroundImage": "https://media.rawg.io/media/games/e6d/e6de699bd788497f4b52e2f41f9698f2.jpg",
     "released": "2017-05-05",
     "createdAt": "2025-10-16T07:33:23.001Z",
-    "updatedAt": "2025-10-16T07:57:49.466Z",
-    "completedAt": null
+    "updatedAt": "2025-10-16T08:08:30.167Z",
+    "completedAt": "2025-10-16T08:08:30.167Z"
   },
   {
     "id": "a1dd89f0-c944-4986-8ec7-b4c55885a429",
@@ -3448,14 +3448,14 @@
     "id": "40e099d4-eb78-4f08-b838-251054d36aa2",
     "rawgId": "1774",
     "title": "Grim Fandango Remastered",
-    "status": "playing",
+    "status": "completed",
     "notes": "",
     "rating": null,
     "backgroundImage": "https://media.rawg.io/media/games/df2/df20fd77db56ae7b0a26a7ff4baa9ccc.jpg",
     "released": "2015-01-26",
     "createdAt": "2025-10-16T07:36:49.510Z",
-    "updatedAt": "2025-10-16T07:58:10.667Z",
-    "completedAt": null
+    "updatedAt": "2025-10-16T08:08:32.315Z",
+    "completedAt": "2025-10-16T08:08:32.315Z"
   },
   {
     "id": "1d34d381-5e17-49cd-ab6d-38c8d9b06445",
@@ -3549,32 +3549,6 @@
     "completedAt": "2025-10-16T07:38:42.807Z"
   },
   {
-    "id": "b920a5af-8e5a-4eca-9d9b-c928700ecd86",
-    "rawgId": "965470",
-    "title": "Counter-Strike 2",
-    "status": "playing",
-    "notes": "",
-    "rating": null,
-    "backgroundImage": "https://media.rawg.io/media/games/ec4/ec4b02bdb3eb5c6212992c19bc05697e.jpg",
-    "released": "2023-09-27",
-    "createdAt": "2025-10-16T07:45:17.622Z",
-    "updatedAt": "2025-10-16T07:58:28.846Z",
-    "completedAt": null
-  },
-  {
-    "id": "e32bf984-c540-4ef9-96c0-87d33ccc9401",
-    "rawgId": "4291",
-    "title": "Counter-Strike: Global Offensive",
-    "status": "playing",
-    "notes": "",
-    "rating": null,
-    "backgroundImage": "https://media.rawg.io/media/games/736/73619bd336c894d6941d926bfd563946.jpg",
-    "released": "2012-08-21",
-    "createdAt": "2025-10-16T07:45:24.168Z",
-    "updatedAt": "2025-10-16T07:58:30.213Z",
-    "completedAt": null
-  },
-  {
     "id": "a9ff581d-bc26-4e42-9edc-d5ff036276c5",
     "rawgId": "681463",
     "title": "Escape Simulator",
@@ -3604,14 +3578,14 @@
     "id": "9cdc99d0-2f0b-4afc-8c61-8c7003ffd1f8",
     "rawgId": "16112",
     "title": "Sleeping Dogs: Definitive Edition",
-    "status": "playing",
+    "status": "completed",
     "notes": "",
     "rating": null,
     "backgroundImage": "https://media.rawg.io/media/games/bd7/bd7cfccfececba1ec2b97a120a40373f.jpg",
     "released": "2014-10-08",
     "createdAt": "2025-10-16T07:46:29.622Z",
-    "updatedAt": "2025-10-16T07:58:38.928Z",
-    "completedAt": null
+    "updatedAt": "2025-10-16T08:08:40.019Z",
+    "completedAt": "2025-10-16T08:08:40.019Z"
   },
   {
     "id": "94838b29-c378-4ab8-bfdb-ea8157bbf8ed",

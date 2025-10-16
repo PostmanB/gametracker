@@ -146,6 +146,20 @@ function App() {
     [backlogGames, nowPlayingGames, completedGames, playedGames]
   );
 
+  const trackerStats = useMemo(() => {
+    const statuses = statusColumns.map((column) => ({
+      key: column.key,
+      label: column.title,
+      count: column.games.length,
+      accent: column.accent,
+    }));
+
+    return {
+      total: games.length,
+      statuses,
+    };
+  }, [games.length, statusColumns]);
+
   const [activeStatus, setActiveStatus] = useState(() => {
     const defaultColumn =
       statusColumns.find((column) => column.games.length > 0) ??
@@ -478,18 +492,41 @@ function App() {
         </div>
         <section className="panel panel--search">
           <h2>Search RAWG</h2>
-          <form className="search" onSubmit={handleSearch}>
-            <input
-              type="search"
-              placeholder="Search game titles"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              aria-label="Search games"
-            />
-            <button type="submit" disabled={searching}>
-              {searching ? "Searching..." : "Search"}
-            </button>
-          </form>
+          <div className="search__layout">
+            <form className="search" onSubmit={handleSearch}>
+              <input
+                type="search"
+                placeholder="Search game titles"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                aria-label="Search games"
+              />
+              <button type="submit" disabled={searching}>
+                {searching ? "Searching..." : "Search"}
+              </button>
+            </form>
+            <div className="search__stats" aria-label="Tracker summary">
+              <dl className="search__stats-grid">
+                <div
+                  className="search__stat search__stat--total"
+                  style={{ "--stat-accent": "#6366f1" }}
+                >
+                  <dt className="search__stat-label">Tracked Games</dt>
+                  <dd className="search__stat-value">{trackerStats.total}</dd>
+                </div>
+                {trackerStats.statuses.map((stat) => (
+                  <div
+                    key={stat.key}
+                    className="search__stat"
+                    style={{ "--stat-accent": stat.accent }}
+                  >
+                    <dt className="search__stat-label">{stat.label}</dt>
+                    <dd className="search__stat-value">{stat.count}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
           {searchResults.length > 0 && (
             <div className="search-results">
               <div className="search-results__header">
