@@ -216,7 +216,7 @@ function App() {
         setError("");
       } catch (err) {
         if (latestSearchRef.current === requestId) {
-          setError(err.message);
+          console.error("Search failed:", err);
         }
       } finally {
         if (latestSearchRef.current === requestId) {
