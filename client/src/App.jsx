@@ -23,7 +23,6 @@ function App() {
   const latestSearchRef = useRef(0);
   const statusAccordionRef = useRef(null);
   const sectionRefs = useRef(new Map());
-  const mobileStickyRef = useRef(null);
   const programmaticScrollRef = useRef(false);
   const scrollResetTimeoutRef = useRef(0);
   const hasInitialScrollRef = useRef(false);
@@ -34,6 +33,25 @@ function App() {
   useEffect(() => {
     loadGames();
   }, []);
+
+  const sortedGames = useMemo(() => {
+    const toTimestamp = (game) => {
+      if (!game) {
+        return 0;
+      }
+      const created = game.createdAt ? Date.parse(game.createdAt) : NaN;
+      if (!Number.isNaN(created)) {
+        return created;
+      }
+      const updated = game.updatedAt ? Date.parse(game.updatedAt) : NaN;
+      if (!Number.isNaN(updated)) {
+        return updated;
+      }
+      return 0;
+    };
+
+    return [...games].sort((a, b) => toTimestamp(b) - toTimestamp(a));
+  }, [games]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -91,20 +109,20 @@ function App() {
   }
 
   const backlogGames = useMemo(
-    () => games.filter((game) => game.status === "backlog"),
-    [games]
+    () => sortedGames.filter((game) => game.status === "backlog"),
+    [sortedGames]
   );
   const nowPlayingGames = useMemo(
-    () => games.filter((game) => game.status === "playing"),
-    [games]
+    () => sortedGames.filter((game) => game.status === "playing"),
+    [sortedGames]
   );
   const completedGames = useMemo(
-    () => games.filter((game) => game.status === "completed"),
-    [games]
+    () => sortedGames.filter((game) => game.status === "completed"),
+    [sortedGames]
   );
   const playedGames = useMemo(
-    () => games.filter((game) => game.status === "played"),
-    [games]
+    () => sortedGames.filter((game) => game.status === "played"),
+    [sortedGames]
   );
   const statusColumns = useMemo(
     () => [
@@ -147,6 +165,20 @@ function App() {
     [backlogGames, nowPlayingGames, completedGames, playedGames]
   );
 
+  const trackerStats = useMemo(() => {
+    const statuses = statusColumns.map((column) => ({
+      key: column.key,
+      label: column.title,
+      count: column.games.length,
+      accent: column.accent,
+    }));
+
+    return {
+      total: games.length,
+      statuses,
+    };
+  }, [games.length, statusColumns]);
+
   const [activeStatus, setActiveStatus] = useState(() => {
     const defaultColumn =
       statusColumns.find((column) => column.games.length > 0) ??
@@ -188,45 +220,45 @@ function App() {
     );
   }, [games]);
 
-  const existingRawgIdsRef = useRef(existingRawgIds);
-  existingRawgIdsRef.current = existingRawgIds;
-
-  const performSearch = useCallback(async (term) => {
-    const trimmed = term.trim();
-    if (!trimmed) {
-      latestSearchRef.current += 1;
-      setSearchResults([]);
-      setSearching(false);
-      setError("");
-      return;
-    }
-
-    const requestId = latestSearchRef.current + 1;
-    latestSearchRef.current = requestId;
-    setSearching(true);
-    try {
-      const data = await searchRawgGames(trimmed, 1);
-      if (latestSearchRef.current !== requestId) {
+  const performSearch = useCallback(
+    async (term) => {
+      const trimmed = term.trim();
+      if (!trimmed) {
+        latestSearchRef.current += 1;
+        setSearchResults([]);
+        setSearching(false);
+        setError("");
         return;
       }
-      const filteredResults = (data.results || []).filter((result) => {
-        if (!result || typeof result.id === "undefined") {
-          return true;
+
+      const requestId = latestSearchRef.current + 1;
+      latestSearchRef.current = requestId;
+      setSearching(true);
+      try {
+        const data = await searchRawgGames(trimmed, 1);
+        if (latestSearchRef.current !== requestId) {
+          return;
         }
-        return !existingRawgIdsRef.current.has(String(result.id));
-      });
-      setSearchResults(filteredResults);
-      setError("");
-    } catch (err) {
-      if (latestSearchRef.current === requestId) {
-        setError(err.message);
+        const filteredResults = (data.results || []).filter((result) => {
+          if (!result || typeof result.id === "undefined") {
+            return true;
+          }
+          return !existingRawgIds.has(String(result.id));
+        });
+        setSearchResults(filteredResults);
+        setError("");
+      } catch (err) {
+        if (latestSearchRef.current === requestId) {
+          console.error("Search failed:", err);
+        }
+      } finally {
+        if (latestSearchRef.current === requestId) {
+          setSearching(false);
+        }
       }
-    } finally {
-      if (latestSearchRef.current === requestId) {
-        setSearching(false);
-      }
-    }
-  }, []);
+    },
+    [existingRawgIds]
+  );
 
   useEffect(() => {
     performSearch(debouncedSearchTerm);
@@ -462,91 +494,10 @@ function App() {
 
     container.addEventListener("scroll", handleScroll, { passive: true });
 
-    // Keep the global mobile sticky header aligned to the active section when sliding
-    const sticky = mobileStickyRef.current;
-    let rafId = 0;
-
-    const updateStickyPosition = () => {
-      if (!sticky || !container) return;
-
-      const activeNode = sectionRefs.current.get(activeStatus);
-      if (!activeNode) return;
-
-      const containerRect = container.getBoundingClientRect();
-      const sectionRect = activeNode.getBoundingClientRect();
-
-      // Calculate left/width relative to viewport
-      const left = Math.max(sectionRect.left, containerRect.left);
-      const right = Math.min(sectionRect.right, containerRect.right);
-      const width = Math.max(0, right - left);
-
-      // Compute top so the fixed header sits under the page header (keeps vertical sticky behavior)
-      const pageHeader = document.querySelector(".layout__header");
-      const headerBottom = pageHeader
-        ? pageHeader.getBoundingClientRect().bottom
-        : 8;
-      const topPx = Math.max(8, Math.round(headerBottom + 6));
-
-      // Apply fixed positioning so the header remains visible during page scroll
-      sticky.style.position = "fixed";
-      sticky.style.left = `${left}px`;
-      sticky.style.width = `${width}px`;
-      sticky.style.top = `${topPx}px`;
-      sticky.style.zIndex = 9999;
-      sticky.style.transform = "none";
-    };
-
-    const scheduleUpdate = () => {
-      if (rafId) return;
-      rafId = window.requestAnimationFrame(() => {
-        rafId = 0;
-        updateStickyPosition();
-      });
-    };
-
-    container.addEventListener("scroll", scheduleUpdate, { passive: true });
-    window.addEventListener("resize", scheduleUpdate, { passive: true });
-    window.addEventListener("scroll", scheduleUpdate, { passive: true });
-
-    // run once immediately to position the sticky header
-    scheduleUpdate();
-
     return () => {
       container.removeEventListener("scroll", handleScroll);
-      container.removeEventListener("scroll", scheduleUpdate);
-      window.removeEventListener("resize", scheduleUpdate);
-      window.removeEventListener("scroll", scheduleUpdate);
-      if (rafId) {
-        window.cancelAnimationFrame(rafId);
-      }
-      const sticky = mobileStickyRef.current;
-      if (sticky) {
-        sticky.style.position = "static";
-        sticky.style.left = null;
-        sticky.style.width = null;
-        sticky.style.top = null;
-        sticky.style.zIndex = null;
-        sticky.style.transform = null;
-      }
     };
   }, [isSliderViewport, statusColumns, activeStatus]);
-
-  // Keep content of the global mobile sticky header up to date
-  useEffect(() => {
-    const sticky = mobileStickyRef.current;
-    if (!sticky) return;
-    const column = statusColumns.find((c) => c.key === activeStatus);
-    if (!column) return;
-    const titleEl = sticky.querySelector(".status-accordion__sticky-title");
-    const countEl = sticky.querySelector(".status-accordion__sticky-count");
-    if (titleEl) titleEl.innerText = column.title;
-    if (countEl)
-      countEl.innerText = loadingGames
-        ? "Loading..."
-        : `${column.games.length} ${
-            column.games.length === 1 ? "game" : "games"
-          }`;
-  }, [mobileStickyRef, activeStatus, statusColumns, loadingGames]);
 
   return (
     <div className="layout">
@@ -560,18 +511,41 @@ function App() {
         </div>
         <section className="panel panel--search">
           <h2>Search RAWG</h2>
-          <form className="search" onSubmit={handleSearch}>
-            <input
-              type="search"
-              placeholder="Search game titles"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              aria-label="Search games"
-            />
-            <button type="submit" disabled={searching}>
-              {searching ? "Searching..." : "Search"}
-            </button>
-          </form>
+          <div className="search__layout">
+            <form className="search" onSubmit={handleSearch}>
+              <input
+                type="search"
+                placeholder="Search game titles"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                aria-label="Search games"
+              />
+              <button type="submit" disabled={searching}>
+                {searching ? "Searching..." : "Search"}
+              </button>
+            </form>
+            <div className="search__stats" aria-label="Tracker summary">
+              <dl className="search__stats-grid">
+                <div
+                  className="search__stat search__stat--total"
+                  style={{ "--stat-accent": "#6366f1" }}
+                >
+                  <dt className="search__stat-label">Tracked Games</dt>
+                  <dd className="search__stat-value">{trackerStats.total}</dd>
+                </div>
+                {trackerStats.statuses.map((stat) => (
+                  <div
+                    key={stat.key}
+                    className="search__stat"
+                    style={{ "--stat-accent": stat.accent }}
+                  >
+                    <dt className="search__stat-label">{stat.label}</dt>
+                    <dd className="search__stat-value">{stat.count}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
           {searchResults.length > 0 && (
             <div className="search-results">
               <div className="search-results__header">
@@ -622,15 +596,6 @@ function App() {
       </header>
 
       <main className="layout__main">
-        {isSliderViewport && (
-          <div
-            className="status-accordion__sticky-header"
-            ref={mobileStickyRef}
-          >
-            <span className="status-accordion__sticky-title" />
-            <span className="status-accordion__sticky-count" />
-          </div>
-        )}
         <div
           className="status-accordion"
           role="tablist"
@@ -649,12 +614,6 @@ function App() {
             const isActive = key === activeStatus;
             const panelId = `status-panel-${key}`;
             const triggerId = `status-trigger-${key}`;
-            const countLabel = `${columnGames.length} ${
-              columnGames.length === 1 ? "game" : "games"
-            }`;
-            const triggerLabel = loadingGames
-              ? `${title} column`
-              : `${title} column, ${countLabel}`;
 
             return (
               <section
@@ -678,18 +637,13 @@ function App() {
                   tabIndex={isActive ? 0 : -1}
                   onClick={() => setActiveStatus(key)}
                   onKeyDown={(event) => handleStatusKeyDown(event, index)}
-                  aria-label={triggerLabel}
                 >
-                  {isSliderViewport ? (
-                    <span
-                      className="status-accordion__trigger-placeholder"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <>
-                      <span>{title}</span>
-                      {isActive && !loadingGames && <small>{countLabel}</small>}
-                    </>
+                  <span>{title}</span>
+                  {isActive && !loadingGames && (
+                    <small>
+                      {columnGames.length}{" "}
+                      {columnGames.length === 1 ? "game" : "games"}
+                    </small>
                   )}
                 </button>
                 <div

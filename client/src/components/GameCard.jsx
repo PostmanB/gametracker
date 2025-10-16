@@ -68,7 +68,7 @@ function GameCard({ game, isBusy, onUpdateStatus, onRemove }) {
     const offsetX = event.clientX - rect.left;
     const offsetY = event.clientY - rect.top;
 
-    const rotateY = ((offsetX / rect.width) - 0.5) * (ROTATION_RANGE * 2);
+    const rotateY = (offsetX / rect.width - 0.5) * (ROTATION_RANGE * 2);
     const rotateX = (0.5 - offsetY / rect.height) * (ROTATION_RANGE * 2);
 
     animateTilt(`${rotateX.toFixed(2)}deg`, `${rotateY.toFixed(2)}deg`, true);
