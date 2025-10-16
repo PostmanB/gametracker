@@ -151,13 +151,15 @@ body {
   writing-mode: initial;
   transform: none;
   flex-direction: row;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  gap: 1rem;
   font-size: 1.45rem;
   padding: 1.75rem;
   letter-spacing: 0.04em;
   position: static;
   top: auto;
+  width: 100%;
 }
 
 .status-accordion__section--active .status-accordion__trigger small {
@@ -170,7 +172,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1.75rem clamp(1.5rem, 4vw, 2.5rem);
+  --panel-horizontal-padding: clamp(1.5rem, 4vw, 2.5rem);
+  --panel-top-padding: 1.75rem;
+  --panel-bottom-padding: 1.75rem;
+  padding: var(--panel-top-padding) var(--panel-horizontal-padding)
+    var(--panel-bottom-padding);
   flex: 1 1 auto;
   /* Keep panel content from overlaying sticky trigger when scrolled */
   z-index: 1;
@@ -186,6 +192,29 @@ body {
   pointer-events: auto;
   visibility: visible;
   transition: opacity 0.3s ease, visibility 0s linear 0s;
+}
+
+.status-accordion__sticky-header {
+  display: none;
+}
+
+.status-accordion__sticky-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-accordion__sticky-count {
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.status-accordion__trigger-placeholder {
+  display: none;
 }
 
 .panel {
@@ -643,6 +672,12 @@ body {
     max-width: var(--accordion-collapsed-width);
   }
 
+  .status-accordion__trigger-placeholder {
+    display: block;
+    width: 100%;
+    min-height: clamp(2.8rem, 6vw, 3.3rem);
+  }
+
   .status-accordion__trigger {
     writing-mode: initial;
     transform: none;
@@ -653,15 +688,85 @@ body {
     gap: 0.75rem;
     font-size: 1.25rem;
     letter-spacing: 0.08em;
+    position: static;
+    top: auto;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
   }
 
   .status-accordion__section--active .status-accordion__trigger {
     font-size: 1.25rem;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .status-accordion__sticky-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + 0.6rem);
+    margin: calc(-1 * var(--panel-top-padding))
+      calc(-1 * var(--panel-horizontal-padding)) 0.9rem;
+    padding: 0.95rem var(--panel-horizontal-padding);
+    border-radius: 24px 24px 0 0;
+    background: linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.9) 0%,
+      rgba(15, 23, 42, 0.78) 100%
+    );
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.45);
+    color: #f8fafc;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    z-index: 12;
+    overflow: hidden;
+    align-self: stretch;
+    transform: translateZ(0);
+  }
+
+  .status-accordion__sticky-header::before,
+  .status-accordion__sticky-header::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .status-accordion__sticky-header::before {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(15, 23, 42, 0.5)
+    );
+    opacity: 0.55;
+  }
+
+  .status-accordion__sticky-header::after {
+    background: linear-gradient(
+      135deg,
+      var(--status-accent, #3b82f6) 0%,
+      rgba(15, 23, 42, 0.74) 55%,
+      rgba(15, 23, 42, 0.38) 100%
+    );
+    opacity: 0.45;
+  }
+
+  .status-accordion__sticky-header span {
+    position: relative;
+    z-index: 1;
   }
 
   .status-accordion__panel {
     --panel-columns: 1;
-    padding: 1.35rem clamp(1rem, 5vw, 1.75rem);
+    --panel-horizontal-padding: clamp(1rem, 5vw, 1.75rem);
+    --panel-top-padding: 1.35rem;
+    --panel-bottom-padding: 1.5rem;
+    padding: var(--panel-top-padding) var(--panel-horizontal-padding)
+      var(--panel-bottom-padding);
   }
 
   .status-accordion__panel .cards-grid {
@@ -714,9 +819,34 @@ body {
     font-size: 1.15rem;
   }
 
+  .status-accordion__trigger-placeholder {
+    min-height: clamp(2.55rem, 7vw, 3rem);
+  }
+
   .status-accordion__panel {
-    padding: 1.2rem 1.1rem 1.45rem;
+    --panel-horizontal-padding: 1.1rem;
+    --panel-top-padding: 1.2rem;
+    --panel-bottom-padding: 1.45rem;
+    padding: var(--panel-top-padding) var(--panel-horizontal-padding)
+      var(--panel-bottom-padding);
     --panel-columns: 1;
+  }
+
+  .status-accordion__sticky-header {
+    top: calc(env(safe-area-inset-top) + 0.45rem);
+    margin: calc(-1 * var(--panel-top-padding))
+      calc(-1 * var(--panel-horizontal-padding)) 0.7rem;
+    padding: 0.75rem var(--panel-horizontal-padding);
+    border-radius: 20px 20px 0 0;
+    gap: 0.6rem;
+  }
+
+  .status-accordion__sticky-title {
+    font-size: 0.92rem;
+  }
+
+  .status-accordion__sticky-count {
+    font-size: 0.74rem;
   }
 
   .status-accordion__panel .cards-grid {
