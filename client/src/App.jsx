@@ -34,6 +34,25 @@ function App() {
     loadGames();
   }, []);
 
+  const sortedGames = useMemo(() => {
+    const toTimestamp = (game) => {
+      if (!game) {
+        return 0;
+      }
+      const created = game.createdAt ? Date.parse(game.createdAt) : NaN;
+      if (!Number.isNaN(created)) {
+        return created;
+      }
+      const updated = game.updatedAt ? Date.parse(game.updatedAt) : NaN;
+      if (!Number.isNaN(updated)) {
+        return updated;
+      }
+      return 0;
+    };
+
+    return [...games].sort((a, b) => toTimestamp(b) - toTimestamp(a));
+  }, [games]);
+
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -90,20 +109,20 @@ function App() {
   }
 
   const backlogGames = useMemo(
-    () => games.filter((game) => game.status === "backlog"),
-    [games]
+    () => sortedGames.filter((game) => game.status === "backlog"),
+    [sortedGames]
   );
   const nowPlayingGames = useMemo(
-    () => games.filter((game) => game.status === "playing"),
-    [games]
+    () => sortedGames.filter((game) => game.status === "playing"),
+    [sortedGames]
   );
   const completedGames = useMemo(
-    () => games.filter((game) => game.status === "completed"),
-    [games]
+    () => sortedGames.filter((game) => game.status === "completed"),
+    [sortedGames]
   );
   const playedGames = useMemo(
-    () => games.filter((game) => game.status === "played"),
-    [games]
+    () => sortedGames.filter((game) => game.status === "played"),
+    [sortedGames]
   );
   const statusColumns = useMemo(
     () => [
